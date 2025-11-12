@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Editor</title>
+  <style>
+    :root {
+      --background-color: #1a1a2e;
+      --surface-color: #16213e;
+      --primary-color: #0f3460;
+      --secondary-color: #e94560;
+      --text-color: #dcdcdc;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+      box-sizing: border-box;
+    }
+    #root {
+      width: 100%;
+      max-width: 1200px;
+    }
+    .app-container {
+      background-color: var(--surface-color);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      color: #fff;
+      margin: 0;
+    }
+    header p {
+      font-size: 1.1rem;
+      color: var(--text-color);
+      opacity: 0.8;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .prompt-group {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: bold;
+        color: #fff;
+        background-color: var(--primary-color);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        text-align: center;
+    }
+    .file-input-wrapper:hover {
+        background-color: #1a4a8a;
+    }
+    .file-input-wrapper input[type="file"] {
+        font-size: 100px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .text-input {
+      flex-grow: 1;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 2px solid var(--primary-color);
+      background-color: #2a2a3e;
+      color: var(--text-color);
+      font-family: var(--font-family);
+    }
+    .text-input:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+    }
+    .generate-btn {
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #fff;
+      background-color: var(--secondary-color);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .generate-btn:hover:not(:disabled) {
+      background-color: #f06a8a;
+    }
+    .generate-btn:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .presets-container {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--primary-color);
+    }
+    .presets-container h3 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #fff;
+        opacity: 0.9;
+    }
+    .presets-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+    .preset-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        color: var(--text-color);
+        background-color: var(--primary-color);
+        border: 1px solid transparent;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .preset-btn:hover {
+        background-color: #1a4a8a;
+        border-color: var(--secondary-color);
+        color: #fff;
+    }
+    .image-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+    .image-container {
+      background-color: #2a2a3e;
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      border: 2px dashed var(--primary-color);
+      text-align: center;
+    }
+    .image-container h3 {
+      margin-top: 0;
+    }
+    .image-container img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .placeholder-text {
+        color: var(--text-color);
+        opacity: 0.6;
+    }
+    .loader {
+      border: 8px solid #f3f3f330;
+      border-top: 8px solid var(--secondary-color);
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .error-message {
+      color: var(--secondary-color);
+      background-color: rgba(233, 69, 96, 0.1);
+      border: 1px solid var(--secondary-color);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+        body {
+            padding: 1rem;
+        }
+        .app-container {
+            padding: 1rem;
+        }
+        .image-comparison {
+            grid-template-columns: 1fr;
+        }
+        .prompt-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        header h1 {
+            font-size: 2rem;
+        }
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
